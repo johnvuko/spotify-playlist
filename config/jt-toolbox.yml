@@ -1,0 +1,12 @@
+development:
+  hosts:
+    host: http://vm.local:3000
+
+production:
+  exception:
+    airbrake:
+      host: https://errbit.eivo.fr
+      project_id: 1
+      project_key: <%= ENV['AIRBRAKE_KEY'] %>
+  hosts:
+    host: https://spotify-playlist.eivo.fr

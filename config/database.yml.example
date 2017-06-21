@@ -1,0 +1,17 @@
+default: &default
+  adapter: postgresql
+  encoding: utf8
+  username: jonathan
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+ 
+development:
+  <<: *default
+  database: spotify-playlist
+
+test:
+  <<: *default
+  database: spotify-playlist_test
+
+production:
+  <<: *default
+  database: spotify-playlist

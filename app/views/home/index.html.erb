@@ -1,0 +1,21 @@
+<h1>Spotify Playlist</h1>
+
+<p>
+	Remove the songs added to the playlist "Remove from spotify" from every playlists.
+</p>
+<p>
+	More information here <a href="https://community.spotify.com/t5/Live-Ideas/Delete-song-from-playlist-in-Now-playing-menu-Mobile/idc-p/1711248" target="_blank">https://community.spotify.com/t5/Live-Ideas/Delete-song-from-playlist-in-Now-playing-menu-Mobile/idc-p/1711248</a>.
+<p>
+</p>
+	This is an open source projet: <a href="https://github.com/jonathantribouharet/spotify-playlist" target="_blank">https://github.com/jonathantribouharet/spotify-playlist</a>
+</p>
+
+<% if current_user %>
+	<% if current_user.spotify_expires_at < Time.now %>
+		<%= link_to "Reconnect to spotify", '/auth/spotify', class: 'btn' %>
+	<% end %>
+
+	<%= link_to 'Disconnect', logout_path, class: 'btn' %>
+<% else %>
+	<%= link_to "Connect to spotify", '/auth/spotify', class: 'btn' %>
+<% end %>
