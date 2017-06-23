@@ -1,6 +1,7 @@
 # Spotify playlist
 
 Remove the songs added to the playlist "Remove from spotify" from every playlists.
+The playlist "Remove from spotify" is checked every 30 minutes.
 
 More information here [https://community.spotify.com/t5/Live-Ideas/Delete-song-from-playlist-in-Now-playing-menu-Mobile/idc-p/1711248](https://community.spotify.com/t5/Live-Ideas/Delete-song-from-playlist-in-Now-playing-menu-Mobile/idc-p/1711248).
 

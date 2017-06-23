@@ -2,6 +2,8 @@
 
 <p>
 	Remove the songs added to the playlist "Remove from spotify" from every playlists.
+	<br>
+	The playlist "Remove from spotify" is checked every 30 minutes.
 </p>
 <p>
 	More information here <a href="https://community.spotify.com/t5/Live-Ideas/Delete-song-from-playlist-in-Now-playing-menu-Mobile/idc-p/1711248" target="_blank">https://community.spotify.com/t5/Live-Ideas/Delete-song-from-playlist-in-Now-playing-menu-Mobile/idc-p/1711248</a>.
@@ -12,10 +14,10 @@
 
 <% if current_user %>
 	<% if current_user.spotify_expires_at < Time.now %>
-		<%= link_to "Reconnect to spotify", '/auth/spotify', class: 'btn' %>
+		<%= link_to "Reconnect to Spotify", '/auth/spotify', class: 'btn' %>
 	<% end %>
 
-	<%= link_to 'Disconnect', logout_path, class: 'btn' %>
+	<%= link_to 'Disconnect from Spotify', logout_path, class: 'btn' %>
 <% else %>
-	<%= link_to "Connect to spotify", '/auth/spotify', class: 'btn' %>
+	<%= link_to "Connect to Spotify", '/auth/spotify', class: 'btn' %>
 <% end %>
