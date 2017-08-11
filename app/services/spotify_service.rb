@@ -5,7 +5,9 @@ require "uri"
 class SpotifyService
 
 	SPOTIFY_MAX_LIMIT = 50
-	SPOTIFY_MAX_LIMIT_DELETE = 100
+	SPOTIFY_MAX_LIMIT_TRACKS = 100
+
+	PLAYLIST_NAME = 'Remove from Spotify'
 
 	attr_reader :base_url, :headers, :token, :spotify_id
 
@@ -29,12 +31,16 @@ class SpotifyService
 		end
 	end
 
-	def create_playlist(name)
+	def create_playlist
 		params = {
-			name: name,
+			name: PLAYLIST_NAME,
 			public: false
 		}
 		request(:post, "users/#{@spotify_id}/playlists", params)
+	end
+
+	def delete_playlist(playlist_id)
+		request(:delete, "users/#{@spotify_id}/playlists/#{playlist_id}/followers")
 	end
 
 	def tracks(playlist_id)
@@ -48,7 +54,7 @@ class SpotifyService
 	end
 
 	def delete_tracks(playlist_ids, tracks_uri)
-		groups_tracks_to_remove_uri = tracks_uri.each_slice(SPOTIFY_MAX_LIMIT_DELETE).to_a
+		groups_tracks_to_remove_uri = tracks_uri.each_slice(SPOTIFY_MAX_LIMIT_TRACKS).to_a
 
 		for tracks_to_remove_uri in groups_tracks_to_remove_uri
 			for playlist_id in playlist_ids
@@ -58,6 +64,35 @@ class SpotifyService
 				request(:delete, "users/#{@spotify_id}/playlists/#{playlist_id}/tracks", params)
 			end
 		end
+	end
+
+	def add_tracks(playlist_id, tracks_uri)
+		groups_tracks_to_add_uri = tracks_uri.each_slice(SPOTIFY_MAX_LIMIT_TRACKS).to_a
+
+		for tracks_to_add_uri in groups_tracks_to_add_uri
+			params = {
+				uris: tracks_to_add_uri
+			}
+			request(:post, "users/#{@spotify_id}/playlists/#{playlist_id}/tracks", params)
+		end
+	end
+
+	# Merge playlist with the name `PLAYLIST_NAME`
+	def fix_duplicates
+		duplicate_playlists = playlists.keep_if {|p| p['name'] == PLAYLIST_NAME }
+		return nil if duplicate_playlists.size < 2
+
+		playlist = duplicate_playlists.pop
+		tracks_uri_to_merge = []
+
+		for duplicate_playlist in duplicate_playlists
+			tracks_uri_to_merge += tracks(duplicate_playlist['id']).map {|x| x['track']['uri'] }
+		end
+
+		add_tracks(playlist['id'], tracks_uri_to_merge)
+		duplicate_playlists.each {|p| delete_playlist(p['id']) }
+
+		playlist
 	end
 
 private
@@ -71,6 +106,7 @@ private
 		# Probably token revoked
 		if result['error']
 			Rails.logger.error "[SpotifyService] #{result['error']}"
+			ExceptionNotifier.notify_exception("[SpotifyService] #{result['error']}", data: {spotify_id: spotify_id})
 			return collection
 		end
 
