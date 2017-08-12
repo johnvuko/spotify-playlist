@@ -24,19 +24,21 @@ class User < ActiveRecord::Base
 
 		# Create the playlist containing tracks to remove
 		if !self.playlist_id || !playlists_ids.include?(self.playlist_id)
-			playlist_remove = playlists.detect {|p| p['name'] == SpotifyService::PLAYLIST_NAME }
+			# Search playlist by name
+			duplicate_playlists = playlists.select {|p| p['name'] == SpotifyService::PLAYLIST_NAME }
+			if duplicate_playlists.size > 1
+				playlist = client.fix_duplicates(duplicate_playlists)
+				self.update_column(:playlist_id, playlist['id']) if playlist
+			elsif duplicate_playlists.size == 1
+				playlist = duplicate_playlists[0]
+				self.update_column(:playlist_id, playlist['id']) if playlist
+			else
+				playlist = client.create_playlist
+				self.update_column(:playlist_id, playlist['id']) if playlist
 
-			# Not supposed to happen
-			if playlist_remove
-				Rails.logger.error "[User#spotify] find playlist by name - user_id: #{self.id}"
-				ExceptionNotifier.notify_exception("[User#spotify] find playlist by name", data: {user_id: self.id})
+				# no tracks to search
+				return
 			end
-
-			playlist_remove ||= client.create_playlist
-			self.update_column(:playlist_id, playlist_remove['id'])
-
-			# no tracks to search
-			return
 		end
 
 		# Get the tracks to remove

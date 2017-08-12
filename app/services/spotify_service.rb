@@ -78,8 +78,8 @@ class SpotifyService
 	end
 
 	# Merge playlist with the name `PLAYLIST_NAME`
-	def fix_duplicates
-		duplicate_playlists = playlists.keep_if {|p| p['name'] == PLAYLIST_NAME }
+	def fix_duplicates(duplicate_playlists = nil)
+		duplicate_playlists ||= playlists.keep_if {|p| p['name'] == PLAYLIST_NAME }
 		return nil if duplicate_playlists.size < 2
 
 		playlist = duplicate_playlists.pop
@@ -103,12 +103,8 @@ private
 
 		result = yield(offset)
 
-		# Probably token revoked
-		if result['error']
-			Rails.logger.error "[SpotifyService] #{result['error']}"
-			ExceptionNotifier.notify_exception("[SpotifyService] #{result['error']}", data: {spotify_id: spotify_id})
-			return collection
-		end
+		# request error
+		return collection if !result
 
 		return collection if result['total'] == 0
 		collection += result['items']
@@ -118,6 +114,10 @@ private
 			begin
 				offset += SPOTIFY_MAX_LIMIT
 				result = yield(offset)
+
+				# request error
+				break if !result
+
 				collection += result['items']
 				continue = !result['next'].nil?
 			end while continue
@@ -126,7 +126,9 @@ private
 		collection
 	end
 
-	def request(method, path, params = {})
+	def request(method, path, params = {}, no_retry = false)
+		Rails.logger.debug "[SpotifyService] request: method: #{method} - path: #{path} - params: #{params}"
+
 		uri = URI.parse(@base_url)
 		http = Net::HTTP.new(uri.host, uri.port)
 		http.use_ssl = true
@@ -152,6 +154,34 @@ private
 
 		return nil if response.body.blank?
 		json = JSON.parse(response.body)
+		
+		if json.is_a?(Hash)
+			# Rate Limit
+			if json.dig('errors', 'status') == 429 && no_retry == false
+				Rails.logger.error "[SpotifyService] request error: Rate Limit #{response['Retry-After']}"
+
+				retry_seconds = response['Retry-After'].to_i
+				if retry_seconds > 0
+					sleep retry_seconds
+					return request(method, path, params, true)
+				end
+			elsif json['errors']
+				data = { 
+					spotify_id: self.spotify_id,
+					method: method,
+					path: path,
+					params: params,
+					json: json
+				}
+
+				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inpsect}" }.join(' - ')}"
+				ExceptionNotifier.notify_exception("[SpotifyService] request error", data: data)
+
+				return nil
+			end
+		end
+
+		json
 	end
 
 end
