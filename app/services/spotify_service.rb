@@ -174,7 +174,7 @@ private
 					json: json
 				}
 
-				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inpsect}" }.join(' - ')}"
+				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inspect}" }.join(' - ')}"
 				ExceptionNotifier.notify_exception("[SpotifyService] request error", data: data)
 
 				return nil
