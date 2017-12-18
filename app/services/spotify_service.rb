@@ -47,9 +47,19 @@ class SpotifyService
 		paginate do |offset|
 			params = {
 				limit: SPOTIFY_MAX_LIMIT,
-				offset: offset	
+				offset: offset
 			}
 			request(:get, "users/#{@spotify_id}/playlists/#{playlist_id}/tracks", params)
+		end
+	end
+
+	def tracks_from_saved_tracks
+		paginate do |offset|
+			params = {
+				limit: SPOTIFY_MAX_LIMIT,
+				offset: offset	
+			}
+			request(:get, "me/tracks", params)
 		end
 	end
 
@@ -63,6 +73,17 @@ class SpotifyService
 				}
 				request(:delete, "users/#{@spotify_id}/playlists/#{playlist_id}/tracks", params)
 			end
+		end
+	end
+
+	def delete_tracks_from_saved_tracks(tracks_ids)
+		groups_tracks_to_remove_ids = tracks_ids.each_slice(SPOTIFY_MAX_LIMIT).to_a
+
+		for tracks_to_remove_ids in groups_tracks_to_remove_ids
+			params = {
+				ids: tracks_to_remove_ids
+			}
+			request(:delete, "me/tracks", params)
 		end
 	end
 

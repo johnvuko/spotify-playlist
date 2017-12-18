@@ -43,10 +43,18 @@ class User < ActiveRecord::Base
 
 		# Get the tracks to remove
 		tracks_to_remove = client.tracks(self.playlist_id)
-		tracks_to_remove_uri = tracks_to_remove.map {|x| x['track']['uri'] }
 
 		# Remove the tracks from all playlists
-		client.delete_tracks(playlists_ids, tracks_to_remove_uri)
+		if self.check_playlists?
+			tracks_to_remove_uri = tracks_to_remove.map {|x| x['track']['uri'] }
+			client.delete_tracks(playlists_ids, tracks_to_remove_uri)
+		end
+
+		# Remove the tracks from "My Music" library
+		if self.check_saved_tracks?
+			tracks_to_remove_ids = tracks_to_remove.map {|x| x['track']['id'] }
+			client.delete_tracks_from_saved_tracks(tracks_to_remove_ids)
+		end
 	end
 
 end

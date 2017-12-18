@@ -8,4 +8,6 @@ Rails.application.routes.draw do
   get 'auth/:provider/callback' => 'sessions#create'
   get 'auth/failure' => 'sessions#failure'
 
+  resources :users, only: [:update]
+
 end

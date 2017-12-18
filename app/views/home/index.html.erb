@@ -13,6 +13,24 @@
 </p>
 
 <% if current_user %>
+	
+	<%= form_for current_user do |f| %>
+
+		<p>
+			<%= f.label :check_playlists, "Remove tracks from your playlists" %>
+			<%= f.check_box :check_playlists %>
+		</p>
+
+		<p>
+			<%= f.label :check_saved_tracks, "Remove tracks from your Library / Songs" %>
+			<%= f.check_box :check_saved_tracks %>
+		</p>
+
+		<%= f.submit "Update your settings", class: 'btn' %>
+
+	<% end %>
+
+
 	<% if current_user.spotify_expires_at < Time.now %>
 		<%= link_to "Reconnect to Spotify", '/auth/spotify', class: 'btn' %>
 	<% end %>

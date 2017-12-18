@@ -25,7 +25,11 @@ a{
 	color: #1db954;
 }
 
-a.btn{
+form{
+	margin-top: 40px;
+}
+
+.btn{
 	margin-top: 20px;
 	display: inline-block;
 	color: white;
@@ -39,4 +43,6 @@ a.btn{
     min-width: 160px;
     font-weight: 700;
     text-align: center;
+    border: none;
+    cursor: pointer;
 }
