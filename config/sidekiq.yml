@@ -1,8 +1,0 @@
-:concurrency: 5
-production:
-  :daemon: true
-  :pidfile: tmp/pids/sidekiq.pid
-  :logfile: log/sidekiq.log
-:queues:
-  - default
-  - mailers

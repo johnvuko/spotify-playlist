@@ -32,3 +32,4 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem 'jt-rails-toolbox', '~> 2.0'
 gem 'whenever', require: false
 gem 'omniauth-spotify-oauth2'
+gem 'sentry-raven'

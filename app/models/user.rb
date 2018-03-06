@@ -10,7 +10,7 @@ class User < ActiveRecord::Base
 				end
 				user.spotify
 			rescue => e
-				ExceptionNotifier.notify_exception(e)
+				Raven.capture_exception(e)
 			end
 		end
 	end
