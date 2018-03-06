@@ -4,6 +4,12 @@ class User < ActiveRecord::Base
 
 	def self.spotify
 		User.find_each do |user| 
+			Raven.user_context({
+				id: user.id,
+				email: user.email,
+				username: user.name,
+				})
+
 			begin
 				if user.spotify_expires_at.nil? || user.spotify_expires_at < 5.minutes.from_now
 					user.refresh_token
@@ -15,6 +21,8 @@ class User < ActiveRecord::Base
 			rescue => e
 				Raven.capture_exception(e)
 			end
+
+			Raven.user_context({})
 		end
 	end
 

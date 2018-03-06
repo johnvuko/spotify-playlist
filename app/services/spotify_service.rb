@@ -232,7 +232,7 @@ private
 				}
 
 				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inspect}" }.join(' - ')}"
-				Raven.capture_exception("[SpotifyService] request error", extra: data)
+				Raven.capture_exception("[SpotifyService] request error", extra: data, tags: { error: json['error']['message'] })
 
 				return nil
 			elsif json['errors']
@@ -245,7 +245,7 @@ private
 				}
 
 				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inspect}" }.join(' - ')}"
-				Raven.capture_exception("[SpotifyService] request error", extra: data)
+				Raven.capture_exception("[SpotifyService] request error", extra: data, tags: { error: json['errors']['message'] })
 
 				return nil
 			end
