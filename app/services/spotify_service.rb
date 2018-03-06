@@ -71,12 +71,13 @@ class SpotifyService
 		end
 	end
 
-	def delete_tracks(playlist_ids, tracks)
+	def delete_tracks(playlists, tracks)
 		local_tracks, tracks = tracks.partition { |x| x['is_local'] }
 		tracks_groups = tracks.each_slice(SPOTIFY_MAX_LIMIT_TRACKS).to_a
 
 		for tracks_to_remove in tracks_groups
-			for playlist_id in playlist_ids
+			for playlist in playlists
+				playlist_id = playlist['id']
 				params = {
 					tracks: tracks_to_remove.map {|x| { uri: x['track']['uri'] } }
 				}
@@ -84,18 +85,19 @@ class SpotifyService
 			end
 		end
 
-		delete_local_tracks(playlist_ids, local_tracks)
+		delete_local_tracks(playlists, local_tracks)
 	end
 
 	# local tracks can be removed like normal tracks
 	# https://developer.spotify.com/web-api/local-files-spotify-playlists/
-	def delete_local_tracks(playlist_ids, tracks)
+	def delete_local_tracks(playlists, tracks)
 		return if tracks.empty?
 
 		tracks_uri = tracks.map {|x| x['track']['uri'] }
 
-		for playlist_id in playlist_ids
-			snapshot_id = playlist(playlist_id)['snapshot_id']
+		for playlist in playlists
+			playlist_id = playlist['id']
+			snapshot_id = playlist['snapshot_id']
 			playlist_tracks = tracks(playlist_id)
 			playlist_tracks.delete_if { |x| !x['is_local'] }
 
@@ -111,7 +113,7 @@ class SpotifyService
 	end
 
 	def delete_tracks_from_saved_tracks(tracks)
-		local_tracks = tracks.delete_if { |x| x['is_local'] } # Not supposed to happen
+		local_tracks, tracks = tracks.partition { |x| x['is_local'] }
 		tracks_groups = tracks.each_slice(SPOTIFY_MAX_LIMIT).to_a
 
 		for tracks_to_remove in tracks_groups
@@ -231,7 +233,7 @@ private
 				}
 
 				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inspect}" }.join(' - ')}"
-				Raven.capture_exception("[SpotifyService] request error", extra: data, tags: { error: json['error']['message'] })
+				Raven.capture_exception("[SpotifyService] request error: #{json['error']['message']}", extra: data)
 
 				return nil
 			elsif json['errors']
@@ -244,7 +246,7 @@ private
 				}
 
 				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inspect}" }.join(' - ')}"
-				Raven.capture_exception("[SpotifyService] request error", extra: data, tags: { error: json['errors']['message'] })
+				Raven.capture_exception("[SpotifyService] request error: #{json['errors']['message']}", extra: data)
 
 				return nil
 			end

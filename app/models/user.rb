@@ -8,7 +8,7 @@ class User < ActiveRecord::Base
 				id: user.id,
 				email: user.email,
 				username: user.name,
-				})
+			})
 
 			begin
 				if user.spotify_expires_at.nil? || user.spotify_expires_at < 5.minutes.from_now
@@ -31,10 +31,10 @@ class User < ActiveRecord::Base
 
 		# Get all playlists of the user
 		playlists = client.playlists
-		playlists_ids = playlists.map {|x| x['id'] }
+		playlist_ids = playlists.map {|x| x['id'] }
 
 		# Create the playlist containing tracks to remove
-		if !self.playlist_id || !playlists_ids.include?(self.playlist_id)
+		if !self.playlist_id || !playlist_ids.include?(self.playlist_id)
 			# Search playlist by name
 			duplicate_playlists = playlists.select {|p| p['name'] == SpotifyService::PLAYLIST_NAME }
 			if duplicate_playlists.size > 1
@@ -58,7 +58,7 @@ class User < ActiveRecord::Base
 
 		# Remove the tracks from all playlists
 		if self.check_playlists?
-			client.delete_tracks(playlists_ids, tracks_to_remove)
+			client.delete_tracks(playlists, tracks_to_remove)
 		end
 
 		# Remove the tracks from "My Music" library
