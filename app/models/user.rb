@@ -8,7 +8,10 @@ class User < ActiveRecord::Base
 				if user.spotify_expires_at.nil? || user.spotify_expires_at < 5.minutes.from_now
 					user.refresh_token
 				end
-				user.spotify
+
+				if !user.access_token_is_expired?
+					user.spotify
+				end
 			rescue => e
 				Raven.capture_exception(e)
 			end

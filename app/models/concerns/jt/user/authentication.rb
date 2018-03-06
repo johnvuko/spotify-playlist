@@ -67,6 +67,10 @@ module JT::User::Authentication
 		})
 	end
 
+	def access_token_is_expired?
+		spotify_expires_at.nil? || spotify_expires_at < Time.now
+	end
+
 	def downcase_email
 		self.email = self.email.downcase.strip if self.email
 	end
