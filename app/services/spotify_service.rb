@@ -22,7 +22,7 @@ class SpotifyService
 	end
 
 	def playlists
-		results = paginate do |offset|
+		results = paginate(SPOTIFY_MAX_LIMIT) do |offset|
 			params = {
 				limit: SPOTIFY_MAX_LIMIT,
 				offset: offset	
@@ -52,9 +52,9 @@ class SpotifyService
 	end
 
 	def tracks(playlist_id)
-		paginate do |offset|
+		paginate(SPOTIFY_MAX_LIMIT_TRACKS) do |offset|
 			params = {
-				limit: SPOTIFY_MAX_LIMIT,
+				limit: SPOTIFY_MAX_LIMIT_TRACKS,
 				offset: offset
 			}
 			request(:get, "users/#{@spotify_id}/playlists/#{playlist_id}/tracks", params)
@@ -62,9 +62,9 @@ class SpotifyService
 	end
 
 	def tracks_from_saved_tracks
-		paginate do |offset|
+		paginate(SPOTIFY_MAX_LIMIT_TRACKS) do |offset|
 			params = {
-				limit: SPOTIFY_MAX_LIMIT,
+				limit: SPOTIFY_MAX_LIMIT_TRACKS,
 				offset: offset	
 			}
 			request(:get, "me/tracks", params)
@@ -114,7 +114,7 @@ class SpotifyService
 
 	def delete_tracks_from_saved_tracks(tracks)
 		local_tracks, tracks = tracks.partition { |x| x['is_local'] }
-		tracks_groups = tracks.each_slice(SPOTIFY_MAX_LIMIT).to_a
+		tracks_groups = tracks.each_slice(SPOTIFY_MAX_LIMIT_TRACKS).to_a
 
 		for tracks_to_remove in tracks_groups
 			params = {
@@ -155,7 +155,7 @@ class SpotifyService
 
 private
 
-	def paginate(&block)
+	def paginate(limit, &block)
 		collection = []
 		offset = 0
 
@@ -170,7 +170,7 @@ private
 
 		if continue
 			begin
-				offset += SPOTIFY_MAX_LIMIT
+				offset += limit
 				result = yield(offset)
 
 				# request error
