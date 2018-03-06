@@ -22,13 +22,17 @@ class SpotifyService
 	end
 
 	def playlists
-		paginate do |offset|
+		results = paginate do |offset|
 			params = {
 				limit: SPOTIFY_MAX_LIMIT,
 				offset: offset	
 			}
 			request(:get, "users/#{@spotify_id}/playlists", params)
 		end
+
+		# Remove "Discover weekly"
+		results.delete_if {|x| x['owner']['id'] == 'spotify' }
+		results
 	end
 
 	def create_playlist
@@ -37,6 +41,11 @@ class SpotifyService
 			public: false
 		}
 		request(:post, "users/#{@spotify_id}/playlists", params)
+	end
+
+	# Use only to get the snapshot_id
+	def playlist(playlist_id)
+		request(:get, "users/#{@spotify_id}/playlists/#{playlist_id}")
 	end
 
 	def delete_playlist(playlist_id)
@@ -63,25 +72,52 @@ class SpotifyService
 		end
 	end
 
-	def delete_tracks(playlist_ids, tracks_uri)
-		groups_tracks_to_remove_uri = tracks_uri.each_slice(SPOTIFY_MAX_LIMIT_TRACKS).to_a
+	def delete_tracks(playlist_ids, tracks)
+		local_tracks, tracks = tracks.partition { |x| x['is_local'] }
+		tracks_groups = tracks.each_slice(SPOTIFY_MAX_LIMIT_TRACKS).to_a
 
-		for tracks_to_remove_uri in groups_tracks_to_remove_uri
+		for tracks_to_remove in tracks_groups
 			for playlist_id in playlist_ids
 				params = {
-					tracks: tracks_to_remove_uri.map { |uri| { uri: uri } }
+					tracks: tracks_to_remove.map {|x| { uri: x['track']['uri'] } }
+				}
+				request(:delete, "users/#{@spotify_id}/playlists/#{playlist_id}/tracks", params)
+			end
+		end
+
+		delete_local_tracks(playlist_ids, local_tracks)
+	end
+
+	# local tracks can be removed like normal tracks
+	# https://developer.spotify.com/web-api/local-files-spotify-playlists/
+	def delete_local_tracks(playlist_ids, tracks)
+		return if tracks.empty?
+
+		tracks_uri = tracks.map {|x| x['track']['uri'] }
+
+		for playlist_id in playlist_ids
+			snapshot_id = playlist(playlist_id)['snapshot_id']
+			playlist_tracks = tracks(playlist_id)
+			playlist_tracks.delete_if { |x| !x['is_local'] }
+
+			positions_to_remove = playlist_tracks.each_index.select { |index| tracks_uri.include?(playlist_tracks[index]['track']['uri']) }
+			if !positions_to_remove.empty?
+				params = {
+					snapshot_id: snapshot_id,
+					positions: positions_to_remove
 				}
 				request(:delete, "users/#{@spotify_id}/playlists/#{playlist_id}/tracks", params)
 			end
 		end
 	end
 
-	def delete_tracks_from_saved_tracks(tracks_ids)
-		groups_tracks_to_remove_ids = tracks_ids.each_slice(SPOTIFY_MAX_LIMIT).to_a
+	def delete_tracks_from_saved_tracks(tracks)
+		local_tracks = tracks.delete_if { |x| x['is_local'] } # Not supposed to happen
+		tracks_groups = tracks.each_slice(SPOTIFY_MAX_LIMIT).to_a
 
-		for tracks_to_remove_ids in groups_tracks_to_remove_ids
+		for tracks_to_remove in tracks_groups
 			params = {
-				ids: tracks_to_remove_ids
+				ids: tracks_to_remove.map {|x| x['track']['id'] }
 			}
 			request(:delete, "me/tracks", params)
 		end
