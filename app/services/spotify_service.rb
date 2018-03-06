@@ -30,8 +30,7 @@ class SpotifyService
 			request(:get, "users/#{@spotify_id}/playlists", params)
 		end
 
-		# Remove "Discover weekly"
-		results.delete_if {|x| x['owner']['id'] == 'spotify' }
+		results.delete_if {|x| x['owner']['id'] != self.spotify_id }
 		results
 	end
 
