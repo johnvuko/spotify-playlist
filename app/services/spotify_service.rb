@@ -186,6 +186,19 @@ private
 					sleep retry_seconds
 					return request(method, path, params, true)
 				end
+			elsif json['error']
+				data = { 
+					spotify_id: self.spotify_id,
+					method: method,
+					path: path,
+					params: params,
+					json: json
+				}
+
+				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inspect}" }.join(' - ')}"
+				Raven.capture_exception("[SpotifyService] request error", extra: data)
+
+				return nil
 			elsif json['errors']
 				data = { 
 					spotify_id: self.spotify_id,
