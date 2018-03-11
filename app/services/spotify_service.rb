@@ -114,7 +114,7 @@ class SpotifyService
 
 	def delete_tracks_from_saved_tracks(tracks)
 		local_tracks, tracks = tracks.partition { |x| x['is_local'] }
-		tracks_groups = tracks.each_slice(SPOTIFY_MAX_LIMIT_TRACKS).to_a
+		tracks_groups = tracks.each_slice(SPOTIFY_MAX_LIMIT).to_a
 
 		for tracks_to_remove in tracks_groups
 			params = {
