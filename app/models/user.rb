@@ -52,6 +52,13 @@ class User < ActiveRecord::Base
 			end
 		end
 
+		# Fix duplicate playlists (bugs reported via Twitter)
+		duplicate_playlists = playlists.select {|p| p['name'] == SpotifyService::PLAYLIST_NAME }
+		if duplicate_playlists.size > 1
+			playlist = client.fix_duplicates(duplicate_playlists)
+			self.update_column(:playlist_id, playlist['id']) if playlist
+		end
+
 		# Get the tracks to remove
 		tracks_to_remove = client.tracks(self.playlist_id)
 		return if tracks_to_remove.empty?
