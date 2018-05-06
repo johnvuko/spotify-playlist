@@ -18,7 +18,17 @@ class User < ActiveRecord::Base
 				if !user.access_token_is_expired?
 					user.spotify
 				end
+			rescue Faraday::ConnectionFailed, Net::OpenTimeout, Net::ReadTimeout, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Errno::ECONNRESET => e
+				# Ignore this errors
+			  Rails.logger.error e.message
+			  Rails.logger.error e.backtrace.join("\n")
+			rescue JSON::ParserError => e
+				# Ignore this errors
+			  Rails.logger.error e.message
+			  Rails.logger.error e.backtrace.join("\n")
 			rescue => e
+			  Rails.logger.error e.message
+			  Rails.logger.error e.backtrace.join("\n")
 				Raven.capture_exception(e)
 			end
 
