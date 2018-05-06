@@ -189,7 +189,7 @@ private
 
 		uri = URI.parse(@base_url)
 		http = Net::HTTP.new(uri.host, uri.port)
-		http.use_ssl = url.scheme == 'https'
+		http.use_ssl = uri.scheme == 'https'
 
 		url = URI.join(base_url, path)
 
