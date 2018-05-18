@@ -227,7 +227,7 @@ private
 		
 		if json.is_a?(Hash)
 			# Rate Limit
-			if json.dig('errors', 'status') == 429
+			if json.dig('error', 'status') == 429
 				Rails.logger.error "[SpotifyService] request error: Rate Limit #{response['Retry-After']}"
 
 				if no_retry == false
@@ -254,19 +254,6 @@ private
 
 				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inspect}" }.join(' - ')}"
 				Raven.capture_exception("[SpotifyService] request error: #{json['error']['message']}", extra: data)
-
-				return nil
-			elsif json['errors']
-				data = { 
-					spotify_id: self.spotify_id,
-					method: method,
-					path: path,
-					params: params,
-					json: json
-				}
-
-				Rails.logger.error "[SpotifyService] request error: #{data.map {|k,v| "#{k}: #{v.inspect}" }.join(' - ')}"
-				Raven.capture_exception("[SpotifyService] request error: #{json['errors']['message']}", extra: data)
 
 				return nil
 			end
