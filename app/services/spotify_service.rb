@@ -215,14 +215,19 @@ private
 		
 		if json.is_a?(Hash)
 			# Rate Limit
-			if json.dig('errors', 'status') == 429 && no_retry == false
+			if json.dig('errors', 'status') == 429
 				Rails.logger.error "[SpotifyService] request error: Rate Limit #{response['Retry-After']}"
 
-				retry_seconds = response['Retry-After'].to_i
-				if retry_seconds > 0
-					sleep retry_seconds
-					return request(method, path, params, true)
+				if no_retry == false
+					retry_seconds = response['Retry-After'].to_i
+					if retry_seconds > 0
+						sleep retry_seconds
+						return request(method, path, params, true)
+					end
 				end
+
+				# Don't send exception for Rate-Limit
+				return nil
 			elsif json['error']
 				data = { 
 					spotify_id: self.spotify_id,
