@@ -56,7 +56,7 @@ Compile all assets and start a server listening `tmp/sockets/puma.sock`:
 
 ## Author
 
-- [Jonathan Tribouharet](https://github.com/jonathantribouharet) ([@johntribouharet](https://twitter.com/johntribouharet))
+- [Jonathan VUKOVICH TRIBOUHARET](https://github.com/jonathantribouharet) ([@johntribouharet](https://twitter.com/johntribouharet))
 
 ## License
 
