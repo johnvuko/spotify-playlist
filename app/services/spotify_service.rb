@@ -1,5 +1,6 @@
 require 'net/http'
 require "uri"
+require 'multi_json'
 
 # https://developer.spotify.com/
 class SpotifyService
@@ -198,20 +199,31 @@ private
 			url.query = URI.encode_www_form(params)
 			response = http.get(url, @headers)
 		when :post
-			response = http.post(url, JSON.dump(params), @headers)
+			response = http.post(url, MultiJson.dump(params), @headers)
 		when :put
-			response = http.put(url, JSON.dump(params), @headers)
+			response = http.put(url, MultiJson.dump(params), @headers)
 		when :delete
 			request = Net::HTTP::Delete.new(url, @headers)
-			request.body = JSON.dump(params)
+			request.body = MultiJson.dump(params)
 
 			response = http.request(request)
 		else
 			raise "Invalid method: #{method}"
 		end
 
-		return nil if response.body.blank?
-		json = JSON.parse(response.body)
+		if response.is_a?(Net::HTTPSuccess)
+			if response.body.blank?
+				return nil
+			else
+				return MultiJson.load(response.body)
+			end
+		end
+
+		json = begin
+			MultiJson.load(response.body)
+		rescue StandardError
+			{}
+		end
 		
 		if json.is_a?(Hash)
 			# Rate Limit
@@ -222,8 +234,11 @@ private
 					retry_seconds = response['Retry-After'].to_i
 					if retry_seconds > 0
 						sleep retry_seconds
-						return request(method, path, params, true)
+					else
+						sleep 2
 					end
+
+					return request(method, path, params, true)
 				end
 
 				# Don't send exception for Rate-Limit
