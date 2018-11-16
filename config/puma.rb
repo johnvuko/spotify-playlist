@@ -6,6 +6,8 @@ environment ENV.fetch("RAILS_ENV") { "development" }
 
 if ENV['RAILS_ENV'] == 'production'
   bind 'unix://tmp/sockets/puma.sock'
+  pidfile 'tmp/pids/puma.pid'
+  state_path 'tmp/pids/puma.state'
   daemonize true
 else
   port ENV.fetch("PORT") { 3000 }
