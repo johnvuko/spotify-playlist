@@ -1,5 +1,7 @@
 class SessionsController < ApplicationController
 	
+	before_action :require_user, on: [:destroy]
+
 	def new
 		redirect_to '/auth/spotify'
 	end
@@ -22,6 +24,12 @@ class SessionsController < ApplicationController
 	end
 
 	def destroy
+		current_user.update({
+			spotify_token: nil,
+			spotify_refresh_token: nil,
+			spotify_expires_at: nil,
+		})
+
 		reset_session
 		redirect_to root_url
 	end	
