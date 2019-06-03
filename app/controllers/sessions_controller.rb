@@ -1,6 +1,6 @@
 class SessionsController < ApplicationController
 	
-	before_action :require_user, on: [:destroy]
+	before_action :require_user, only: [:destroy]
 
 	def new
 		redirect_to '/auth/spotify'
