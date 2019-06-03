@@ -25,7 +25,6 @@ class SessionsController < ApplicationController
 
 	def destroy
 		current_user.update({
-			spotify_token: nil,
 			spotify_refresh_token: nil,
 			spotify_expires_at: nil,
 		})
