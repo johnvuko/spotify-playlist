@@ -43,6 +43,8 @@ module JT::User::Authentication
 	end
 
 	def refresh_token
+		return false if self.spotify_refresh_token.nil?
+
 		client_options = OmniAuth::Strategies::Spotify.default_options[:client_options].to_h.symbolize_keys
 		client = OAuth2::Client.new(SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, client_options)
 
